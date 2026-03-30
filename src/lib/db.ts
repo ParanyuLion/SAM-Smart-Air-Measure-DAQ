@@ -1,7 +1,15 @@
-import { PrismaClient } from "@prisma/client";
+let db: any = null;
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+try {
+  const { PrismaClient } = require("@prisma/client");
+  const globalForPrisma = globalThis as unknown as { prisma: any };
+  db = globalForPrisma.prisma || new PrismaClient();
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = db;
+  }
+} catch {
+  // PrismaClient not available — likely not generated yet or DB not configured
+  db = null;
+}
 
-export const db = globalForPrisma.prisma || new PrismaClient();
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+export { db };

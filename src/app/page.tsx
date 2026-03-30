@@ -1,4 +1,4 @@
-import { db } from "../lib/db";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -12,37 +12,37 @@ export default function Home() {
           Stay informed with our smart air monitoring system.<br></br>
           We blend real-time sensor data with external sources to bring you an accessible, visualized breakdown of your air quality.
         </p>
-        <div className="flex justify-center w-full">
-          <button className="btn btn-primary">Get Started</button>
+        <div className="flex gap-4 justify-center w-full">
+          <Link href="/features" className="btn btn-primary" id="btn-get-started">Get Started</Link>
         </div>
       </section>
 
       <section id="features" className="card-grid fade-in-up delay-200">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-12">
 
-          <div className="feature-card glass-panel">
+          <Link href="/features" className="feature-card glass-panel" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div className="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20"></path><circle cx="12" cy="12" r="10"></circle></svg>
             </div>
-            <h3 className="feature-title">Next.js App Router</h3>
-            <p className="feature-desc">Utilize React Server Components and nested routing for peak performance and unparalleled developer experience.</p>
-          </div>
+            <h3 className="feature-title">Air Quality Index</h3>
+            <p className="feature-desc">Real-time AQI estimation based on weather station data from across Thailand, powered by TMD weather API.</p>
+          </Link>
 
-          <div className="feature-card glass-panel delay-100">
+          <Link href="/features" className="feature-card glass-panel delay-100" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div className="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
             </div>
-            <h3 className="feature-title">MySQL & Prisma</h3>
-            <p className="feature-desc">Type-safe database interaction using Prisma ORM. Connected efficiently via singleton pattern in development.</p>
-          </div>
+            <h3 className="feature-title">Analytics & Trends</h3>
+            <p className="feature-desc">Visualize temperature, humidity, and atmospheric pressure trends across locations in your area.</p>
+          </Link>
 
-          <div className="feature-card glass-panel delay-200">
+          <Link href="/dashboard" className="feature-card glass-panel delay-200" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div className="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             </div>
-            <h3 className="feature-title">Premium Aesthetics</h3>
-            <p className="feature-desc">Vanilla CSS with glassmorphism, fluid gradients, and refined typography configured out of the box.</p>
-          </div>
+            <h3 className="feature-title">Smart Dashboard</h3>
+            <p className="feature-desc">A unified view of all your sensor data and database readings, neatly organized for quick insights.</p>
+          </Link>
 
         </div>
       </section>
