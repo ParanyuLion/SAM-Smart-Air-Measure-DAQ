@@ -4,13 +4,90 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
-model User {
+model aqi {
+  id   Int      @id @default(autoincrement())
+  pm25 Float    @db.Float
+  lat  Float    @db.Float
+  lon  Float    @db.Float
+  ts   DateTime @default(now()) @db.Timestamp(0)
+}
+
+model aqi_data {
+  id   Int      @id @default(autoincrement())
+  ts   DateTime @default(now()) @db.Timestamp(0)
+  pm10 Int
+  pm25 Int
+  lat  Float    @db.Float
+  lon  Float    @db.Float
+}
+
+model kidbright {
+  id    Int      @id @default(autoincrement())
+  ts    DateTime @default(now()) @db.Timestamp(0)
+  lat   Float    @db.Float
+  lon   Float    @db.Float
+  temp  Float    @db.Float
+  light Float    @db.Float
+}
+
+model sensor_data {
   id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  ts        DateTime @default(now()) @db.Timestamp(0)
+  place     String   @db.VarChar(20)
+  temp_dht  Float    @db.Float
+  temp_ky   Float    @db.Float
+  humidity  Int
+  pm10      Int
+  pm25      Int
+  pm100     Int
+  co_raw    Int
+  smoke_raw Int
+  lat       Float    @db.Float
+  lon       Float    @db.Float
+}
+
+model tmd {
+  id       Int      @id @default(autoincrement())
+  ts       DateTime @default(now()) @db.DateTime(0)
+  temp     Float    @db.Float
+  humidity Float    @db.Float
+  rainfall Float    @db.Float
+  lat      Float    @db.Float
+  lon      Float    @db.Float
+}
+
+model tmd_data {
+  id       Int      @id @default(autoincrement())
+  ts       DateTime @default(now()) @db.Timestamp(0)
+  temp     Float    @db.Float
+  humidity Float    @db.Float
+  rainfall Float    @db.Float
+  lat      Float    @db.Float
+  lon      Float    @db.Float
+}
+
+model weather {
+  id     Int             @id @default(autoincrement())
+  ts     DateTime?       @db.Timestamp(0)
+  lat    Float?          @db.Float
+  lon    Float?          @db.Float
+  sensor weather_sensor?
+  source weather_source?
+  value  Float?          @db.Float
+}
+
+enum weather_sensor {
+  temperature
+  light
+  pm25
+  humidity
+  rain
+}
+
+enum weather_source {
+  tmd
+  kidbright
+  aqi
 }
