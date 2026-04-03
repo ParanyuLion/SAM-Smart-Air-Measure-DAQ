@@ -1,15 +1,16 @@
-import { db } from "../../lib/db";
+import { db, dbInitError } from "../../lib/db";
 import Link from "next/link";
 
 async function getDashboardData() {
   if (!db) {
-    return { connected: false, userCount: 0 };
+    return { connected: false, recordCount: 0, errorMsg: dbInitError || "Database failed to initialize" };
   }
   try {
-    const userCount = await db.user.count();
-    return { connected: true, userCount };
-  } catch (e) {
-    return { connected: false, userCount: 0 };
+    const recordCount = await db.sensor_data.count();
+    return { connected: true, recordCount, errorMsg: "" };
+  } catch (e: any) {
+    console.error("Dashboard DB Error:", e);
+    return { connected: false, recordCount: 0, errorMsg: e?.message || String(e) };
   }
 }
 
@@ -53,10 +54,10 @@ export default async function DashboardPage() {
               <h3 style={{ fontWeight: 700, fontSize: '1.15rem', marginBottom: '0.25rem' }}>
                 MySQL Database {data.connected ? 'Connected' : 'Not Connected'}
               </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, wordBreak: 'break-all' }}>
                 {data.connected
-                  ? `Successfully connected via Prisma ORM · ${data.userCount} user(s) in database`
-                  : 'Unable to reach MySQL database. Make sure your phpMyAdmin / MySQL server is running and .env is configured.'}
+                  ? `Successfully connected via Prisma ORM · ${data.recordCount} sensor data record(s)`
+                  : `Unable to reach MySQL database. URL: ${process.env.DATABASE_URL?.replace(/:([^:@]{1,})@/, ":***@")} | Error: ${data.errorMsg}`}
               </p>
             </div>
           </div>
@@ -69,8 +70,8 @@ export default async function DashboardPage() {
           <DashboardCard
             icon="🗄️"
             title="Database Records"
-            value={data.connected ? `${data.userCount}` : '—'}
-            subtitle="Total users in MySQL"
+            value={data.connected ? `${data.recordCount}` : '—'}
+            subtitle="Sensor data in MySQL"
             color="#6366f1"
           />
           <DashboardCard
@@ -134,8 +135,8 @@ export default async function DashboardPage() {
               }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🗄️</div>
-                  {data.userCount > 0
-                    ? `${data.userCount} record(s) found in database`
+                  {data.recordCount > 0
+                    ? `${data.recordCount} record(s) found in database`
                     : 'Database empty — add records via phpMyAdmin'}
                 </div>
               </div>
