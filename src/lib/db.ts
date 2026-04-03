@@ -4,20 +4,17 @@ let dbInitError: string | null = null;
 try {
   const { PrismaClient } = require("@prisma/client");
   const { PrismaMariaDb } = require("@prisma/adapter-mariadb");
-  const { createPool } = require("mariadb");
 
   const globalForPrisma = globalThis as unknown as { prisma: any };
   
   if (!globalForPrisma.prisma) {
-    const pool = createPool({
+    const adapter = new PrismaMariaDb({
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT || "3306", 10),
       user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD, // Unescaped password works flawlessly here!
+      password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      connectionLimit: 5
     });
-    const adapter = new PrismaMariaDb(pool);
     globalForPrisma.prisma = new PrismaClient({ adapter });
   }
   
