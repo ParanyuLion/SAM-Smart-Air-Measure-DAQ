@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 /* ─── AQI standard categories (US EPA) ─── */
@@ -26,15 +26,45 @@ function getAqiLevel(aqi: number): AqiLevel {
   return AQI_LEVELS.find((l) => aqi >= l.min && aqi <= l.max) || AQI_LEVELS[AQI_LEVELS.length - 1];
 }
 
-/* ─── Haversine distance in km ─── */
-function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+/* ─── WMO Weather Code → Icon & Label ─── */
+const WMO_CODES: Record<number, { icon: string; label: string }> = {
+  0:  { icon: "☀️", label: "Clear sky" },
+  1:  { icon: "🌤️", label: "Mainly clear" },
+  2:  { icon: "⛅", label: "Partly cloudy" },
+  3:  { icon: "☁️", label: "Overcast" },
+  45: { icon: "🌫️", label: "Fog" },
+  48: { icon: "🌫️", label: "Depositing rime fog" },
+  51: { icon: "🌦️", label: "Light drizzle" },
+  53: { icon: "🌦️", label: "Moderate drizzle" },
+  55: { icon: "🌦️", label: "Dense drizzle" },
+  56: { icon: "🌦️", label: "Freezing drizzle" },
+  57: { icon: "🌦️", label: "Heavy freezing drizzle" },
+  61: { icon: "🌧️", label: "Slight rain" },
+  63: { icon: "🌧️", label: "Moderate rain" },
+  65: { icon: "🌧️", label: "Heavy rain" },
+  66: { icon: "🌧️", label: "Freezing rain" },
+  67: { icon: "🌧️", label: "Heavy freezing rain" },
+  71: { icon: "❄️", label: "Slight snow" },
+  73: { icon: "❄️", label: "Moderate snow" },
+  75: { icon: "❄️", label: "Heavy snow" },
+  77: { icon: "❄️", label: "Snow grains" },
+  80: { icon: "🌧️", label: "Slight rain showers" },
+  81: { icon: "🌧️", label: "Moderate rain showers" },
+  82: { icon: "🌧️", label: "Violent rain showers" },
+  85: { icon: "❄️", label: "Slight snow showers" },
+  86: { icon: "❄️", label: "Heavy snow showers" },
+  95: { icon: "⛈️", label: "Thunderstorm" },
+  96: { icon: "⛈️", label: "Thunderstorm + hail" },
+  99: { icon: "⛈️", label: "Thunderstorm + heavy hail" },
+};
+
+function getWeatherInfo(code: number) {
+  return WMO_CODES[code] || { icon: "🌡️", label: "Unknown" };
+}
+
+function windDirectionLabel(deg: number): string {
+  const dirs = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+  return dirs[Math.round(deg / 22.5) % 16];
 }
 
 /* ─── Types ─── */
@@ -58,39 +88,46 @@ interface AqiData {
   forecast: { day: string; avg: number; min: number; max: number }[];
 }
 
-interface StationData {
-  name: string;
-  nameThai: string;
-  province: string;
-  lat: number;
-  lon: number;
-  distance: number;
+interface WeatherCurrent {
   temperature: number;
   humidity: number;
-  pressure: number;
-  visibility: number;
+  rain: number;
+  weatherCode: number;
   windSpeed: number;
-  windDirection: string;
-  rainfall24h: number;
-  dateTime: string;
+  windDirection: number;
+  time: string;
+}
+
+interface WeatherDaily {
+  date: string;
+  weatherCode: number;
+  tempMin: number;
+  tempMax: number;
+  windSpeedMax: number;
+  precipProbMax: number;
+  precipSum: number;
+  uvIndexMax: number;
+  windDirectionDominant: number;
 }
 
 export default function FeaturesPage() {
   const [aqiData, setAqiData] = useState<AqiData | null>(null);
-  const [stations, setStations] = useState<StationData[]>([]);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number; city: string } | null>(null);
+  const [weatherCurrent, setWeatherCurrent] = useState<WeatherCurrent | null>(null);
+  const [weatherDaily, setWeatherDaily] = useState<WeatherDaily[]>([]);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number; city: string; timezone: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        // Step 1: get location by IP
+        // Step 1: get location by IP (includes timezone)
         const locRes = await fetch("/api/location");
         const locData = await locRes.json();
         const lat = locData.lat ?? 13.75;
         const lon = locData.lon ?? 100.52;
-        setUserLocation({ lat, lon, city: locData.city || locData.regionName || "Unknown" });
+        const timezone = locData.timezone || "Asia/Bangkok";
+        setUserLocation({ lat, lon, city: locData.city || locData.regionName || "Unknown", timezone });
 
         // Step 2: get real AQI from AQICN
         const aqiRes = await fetch(`/api/aqi?lat=${lat}&lng=${lon}`);
@@ -120,33 +157,38 @@ export default function FeaturesPage() {
           });
         }
 
-        // Step 3: get TMD weather data for station table
-        const weatherRes = await fetch("/api/weather");
-        const weatherData = await weatherRes.json();
-        const weatherStations = weatherData?.Stations?.Station || [];
+        // Step 3: get Open-Meteo weather data
+        const weatherRes = await fetch(`/api/weather?lat=${lat}&lon=${lon}&timezone=${encodeURIComponent(timezone)}`);
+        const weatherJson = await weatherRes.json();
 
-        const processed: StationData[] = weatherStations.map((s: any) => {
-          const obs = s.Observation;
-          return {
-            name: s.StationNameEnglish,
-            nameThai: s.StationNameThai,
-            province: s.Province,
-            lat: parseFloat(s.Latitude),
-            lon: parseFloat(s.Longitude),
-            distance: haversine(lat, lon, parseFloat(s.Latitude), parseFloat(s.Longitude)),
-            temperature: parseFloat(obs.AirTemperature) || 0,
-            humidity: parseFloat(obs.RelativeHumidity) || 0,
-            pressure: parseFloat(obs.MeanSeaLevelPressure) || 0,
-            visibility: parseFloat(obs.LandVisibility) || 0,
-            windSpeed: parseFloat(obs.WindSpeed) || 0,
-            windDirection: typeof obs.WindDirection === "string" ? obs.WindDirection : "—",
-            rainfall24h: parseFloat(obs.Rainfall24Hr) || 0,
-            dateTime: obs.DateTime,
-          };
-        });
+        if (weatherJson.current) {
+          const c = weatherJson.current;
+          setWeatherCurrent({
+            temperature: c.temperature_2m,
+            humidity: c.relative_humidity_2m,
+            rain: c.rain,
+            weatherCode: c.weather_code,
+            windSpeed: c.wind_speed_10m,
+            windDirection: c.wind_direction_10m,
+            time: c.time,
+          });
+        }
 
-        processed.sort((a, b) => a.distance - b.distance);
-        setStations(processed);
+        if (weatherJson.daily) {
+          const d = weatherJson.daily;
+          const days: WeatherDaily[] = d.time.map((t: string, i: number) => ({
+            date: t,
+            weatherCode: d.weather_code[i],
+            tempMin: d.temperature_2m_min[i],
+            tempMax: d.temperature_2m_max[i],
+            windSpeedMax: d.wind_speed_10m_max[i],
+            precipProbMax: d.precipitation_probability_max[i],
+            precipSum: d.precipitation_sum[i],
+            uvIndexMax: d.uv_index_max[i],
+            windDirectionDominant: d.wind_direction_10m_dominant[i],
+          }));
+          setWeatherDaily(days);
+        }
       } catch (e) {
         setError("Failed to load data. Please try again later.");
       } finally {
@@ -161,7 +203,7 @@ export default function FeaturesPage() {
       <div className="container" style={{ paddingTop: "120px", textAlign: "center", minHeight: "80vh" }}>
         <div className="loading-spinner" />
         <p style={{ marginTop: "1.5rem", color: "var(--text-secondary)", fontSize: "1.1rem" }}>
-          Detecting your location & fetching real-time AQI…
+          Detecting your location & fetching real-time data…
         </p>
       </div>
     );
@@ -177,7 +219,6 @@ export default function FeaturesPage() {
 
   const aqi = aqiData?.aqi ?? 0;
   const level = getAqiLevel(aqi);
-  const topStations = stations.slice(0, 8);
 
   return (
     <div className="container" style={{ paddingTop: "100px", paddingBottom: "60px" }}>
@@ -187,10 +228,10 @@ export default function FeaturesPage() {
           Air Quality <span className="text-gradient">Analytics</span>
         </h1>
         <p className="hero-subtitle" style={{ textAlign: "left", marginBottom: "0" }}>
-          Real-time AQI data from <a href="https://aqicn.org/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", fontWeight: 600 }}>aqicn.org</a> + weather data from TMD.
+          Real-time AQI data from <a href="https://aqicn.org/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", fontWeight: 600 }}>aqicn.org</a> + weather data from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", fontWeight: 600 }}>Open-Meteo</a>.
           {userLocation && (
             <>
-              <br />📍 Detected location: <strong>{userLocation.city}</strong> ({userLocation.lat.toFixed(2)}°N, {userLocation.lon.toFixed(2)}°E)
+              <br />📍 Detected location: <strong>{userLocation.city}</strong> ({userLocation.lat.toFixed(2)}°N, {userLocation.lon.toFixed(2)}°E) · 🕐 {userLocation.timezone}
             </>
           )}
         </p>
@@ -287,13 +328,53 @@ export default function FeaturesPage() {
         </section>
       )}
 
-      {/* PM2.5 Forecast + Nearest Weather Station */}
-      {aqiData && aqiData.forecast.length > 0 && (
-        <section className="fade-in-up delay-200" style={{ marginBottom: "3rem" }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* PM2.5 Forecast */}
-            <div>
-              <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "1rem" }}>PM2.5 Forecast (7 days)</h2>
+      {/* Current Weather + PM2.5 Forecast */}
+      <section className="fade-in-up delay-200" style={{ marginBottom: "3rem" }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Current Weather from Open-Meteo */}
+          <div>
+            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "1rem" }}>Current Weather</h2>
+            {weatherCurrent ? (
+              <div className="glass-panel" style={{ padding: "1.5rem", borderRadius: "16px", height: "calc(100% - 2.3rem)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.25rem" }}>
+                  <div style={{
+                    width: "64px", height: "64px", borderRadius: "16px",
+                    background: "rgba(99,102,241,0.1)", display: "flex",
+                    alignItems: "center", justifyContent: "center", fontSize: "2rem", flexShrink: 0,
+                  }}>
+                    {getWeatherInfo(weatherCurrent.weatherCode).icon}
+                  </div>
+                  <div>
+                    <h3 style={{ fontWeight: 700, fontSize: "1.1rem", margin: 0 }}>
+                      {getWeatherInfo(weatherCurrent.weatherCode).label}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: "2rem", fontWeight: 800, lineHeight: 1.1, color: "var(--primary)" }}>
+                      {weatherCurrent.temperature}°C
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2" style={{ gap: "0.75rem" }}>
+                  <WeatherItem icon="💧" label="Humidity" value={`${weatherCurrent.humidity}%`} />
+                  <WeatherItem icon="🌧️" label="Rain" value={`${weatherCurrent.rain} mm`} />
+                  <WeatherItem icon="🌬️" label="Wind Speed" value={`${weatherCurrent.windSpeed} km/h`} />
+                  <WeatherItem icon="🧭" label="Wind Dir." value={`${windDirectionLabel(weatherCurrent.windDirection)} (${weatherCurrent.windDirection}°)`} />
+                </div>
+                <p style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginTop: "1rem", marginBottom: 0 }}>
+                  Source: Open-Meteo · Updated: {weatherCurrent.time.replace("T", " ")}
+                  {userLocation && ` · Timezone: ${userLocation.timezone}`}
+                </p>
+              </div>
+            ) : (
+              <div className="glass-panel" style={{ padding: "2rem", borderRadius: "16px", textAlign: "center", color: "var(--text-secondary)" }}>
+                Weather data unavailable
+              </div>
+            )}
+          </div>
+
+          {/* PM2.5 Forecast */}
+          <div>
+            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "1rem" }}>PM2.5 Forecast (7 days)</h2>
+            {aqiData && aqiData.forecast.length > 0 ? (
               <div className="glass-panel" style={{ padding: "1.5rem", borderRadius: "16px", height: "calc(100% - 2.3rem)" }}>
                 <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end", height: "180px" }}>
                   {aqiData.forecast.map((f, i) => {
@@ -327,46 +408,77 @@ export default function FeaturesPage() {
                   })}
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="glass-panel" style={{ padding: "2rem", borderRadius: "16px", textAlign: "center", color: "var(--text-secondary)", height: "calc(100% - 2.3rem)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                PM2.5 forecast data not available for this location
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
-            {/* Nearest TMD Weather Station */}
-            <div>
-              <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "1rem" }}>
-                Nearest Weather Station
-              </h2>
-              {stations.length > 0 ? (
-                <div className="glass-panel" style={{ padding: "1.5rem", borderRadius: "16px", height: "calc(100% - 2.3rem)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
-                    <div style={{
-                      width: "44px", height: "44px", borderRadius: "12px",
-                      background: "rgba(99,102,241,0.1)", display: "flex",
-                      alignItems: "center", justifyContent: "center", fontSize: "1.3rem", flexShrink: 0,
-                    }}>📡</div>
-                    <div>
-                      <h3 style={{ fontWeight: 700, fontSize: "1rem", margin: 0 }}>{stations[0].name}</h3>
-                      <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-                        {stations[0].nameThai} · {stations[0].distance.toFixed(1)} km away
-                      </p>
+      {/* ═══ 7-Day Weather Forecast ═══ */}
+      {weatherDaily.length > 0 && (
+        <section className="fade-in-up delay-200" style={{ marginBottom: "3rem" }}>
+          <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "1rem" }}>7-Day Weather Forecast</h2>
+          <div className="forecast-row">
+            {weatherDaily.map((day, i) => {
+              const info = getWeatherInfo(day.weatherCode);
+              const dateObj = new Date(day.date + "T00:00:00");
+              const isToday = i === 0;
+              const dayName = isToday ? "Today" : dateObj.toLocaleDateString("en", { weekday: "short" });
+              const dateLabel = dateObj.toLocaleDateString("en", { month: "short", day: "numeric" });
+
+              return (
+                <div key={i} className={`forecast-day-card glass-panel${isToday ? " forecast-today" : ""}`}>
+                  {/* Day label */}
+                  <div style={{ textAlign: "center", marginBottom: "0.5rem" }}>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: isToday ? "var(--primary)" : "var(--text-primary)" }}>
+                      {dayName}
+                    </div>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)" }}>{dateLabel}</div>
+                  </div>
+
+                  {/* Weather icon */}
+                  <div style={{ fontSize: "2.2rem", textAlign: "center", margin: "0.5rem 0", lineHeight: 1 }}>
+                    {info.icon}
+                  </div>
+                  <div style={{ fontSize: "0.7rem", textAlign: "center", color: "var(--text-secondary)", marginBottom: "0.75rem", lineHeight: 1.2 }}>
+                    {info.label}
+                  </div>
+
+                  {/* Temp range */}
+                  <div style={{ textAlign: "center", marginBottom: "0.75rem" }}>
+                    <span style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-primary)" }}>
+                      {Math.round(day.tempMax)}°
+                    </span>
+                    <span style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginLeft: "0.25rem" }}>
+                      / {Math.round(day.tempMin)}°
+                    </span>
+                  </div>
+
+                  {/* Details */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", fontSize: "0.75rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ color: "var(--text-secondary)" }}>💧 Rain</span>
+                      <span style={{ fontWeight: 600 }}>{day.precipProbMax}%</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ color: "var(--text-secondary)" }}>🌧️ Precip</span>
+                      <span style={{ fontWeight: 600 }}>{day.precipSum} mm</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ color: "var(--text-secondary)" }}>☀️ UV Index</span>
+                      <span style={{ fontWeight: 600 }}>{day.uvIndexMax.toFixed(1)}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ color: "var(--text-secondary)" }}>🌬️ Wind</span>
+                      <span style={{ fontWeight: 600 }}>{Math.round(day.windSpeedMax)} km/h</span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2" style={{ gap: "0.75rem" }}>
-                    <WeatherItem icon="🌡️" label="Temperature" value={`${stations[0].temperature}°C`} />
-                    <WeatherItem icon="💧" label="Humidity" value={`${stations[0].humidity}%`} />
-                    <WeatherItem icon="🌬️" label="Wind" value={`${stations[0].windSpeed} km/h`} />
-                    <WeatherItem icon="👁️" label="Visibility" value={`${stations[0].visibility} km`} />
-                    <WeatherItem icon="📊" label="Pressure" value={`${stations[0].pressure} hPa`} />
-                    <WeatherItem icon="🌧️" label="Rain (24h)" value={`${stations[0].rainfall24h} mm`} />
-                  </div>
-                  <p style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginTop: "1rem", marginBottom: 0 }}>
-                    Source: TMD Weather3Hours API · Updated: {stations[0].dateTime}
-                  </p>
                 </div>
-              ) : (
-                <div className="glass-panel" style={{ padding: "2rem", borderRadius: "16px", textAlign: "center", color: "var(--text-secondary)" }}>
-                  Loading weather data…
-                </div>
-              )}
-            </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -410,63 +522,21 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* TMD Weather Stations Table */}
-      {stations.length > 0 && (
-        <section className="fade-in-up delay-300" style={{ marginBottom: "3rem" }}>
-          <h2 style={{ fontSize: "1.3rem", fontWeight: 700, marginBottom: "1rem" }}>Nearby TMD Weather Stations</h2>
-          <div className="glass-panel" style={{ padding: "0", borderRadius: "16px", overflow: "hidden" }}>
-            <div style={{ overflowX: "auto" }}>
-              <table className="data-table" id="stations-table">
-                <thead>
-                  <tr>
-                    <th>Station</th>
-                    <th>Distance</th>
-                    <th>Temp</th>
-                    <th>Humidity</th>
-                    <th>Visibility</th>
-                    <th>Wind</th>
-                    <th>Rain 24h</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topStations.map((s, i) => (
-                    <tr key={i}>
-                      <td>
-                        <strong>{s.name}</strong>
-                        <br />
-                        <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>{s.nameThai}</span>
-                      </td>
-                      <td>{s.distance.toFixed(1)} km</td>
-                      <td>{s.temperature}°C</td>
-                      <td>{s.humidity}%</td>
-                      <td>{s.visibility} km</td>
-                      <td>{s.windSpeed} km/h</td>
-                      <td>{s.rainfall24h} mm</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Attribution */}
-      {aqiData && aqiData.attributions.length > 0 && (
-        <section className="fade-in-up delay-300" style={{ marginBottom: "2rem" }}>
-          <div className="glass-panel" style={{ padding: "1.25rem 1.5rem", borderRadius: "12px" }}>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
-              <strong>Data sources:</strong>{" "}
-              {aqiData.attributions.map((a, i) => (
-                <span key={i}>
-                  {i > 0 && " · "}
-                  <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{a.name}</a>
-                </span>
-              ))}
-            </p>
-          </div>
-        </section>
-      )}
+      <section className="fade-in-up delay-300" style={{ marginBottom: "2rem" }}>
+        <div className="glass-panel" style={{ padding: "1.25rem 1.5rem", borderRadius: "12px" }}>
+          <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
+            <strong>Data sources:</strong>{" "}
+            <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>Open-Meteo</a>
+            {aqiData && aqiData.attributions.length > 0 && aqiData.attributions.map((a, i) => (
+              <span key={i}>
+                {" · "}
+                <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{a.name}</a>
+              </span>
+            ))}
+          </p>
+        </div>
+      </section>
 
       <div style={{ textAlign: "center", marginTop: "2rem" }}>
         <Link href="/dashboard" className="btn btn-primary" id="btn-go-dashboard">

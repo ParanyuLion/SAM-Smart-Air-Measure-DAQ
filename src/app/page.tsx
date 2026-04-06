@@ -24,24 +24,24 @@ export default function Home() {
             <div className="feature-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M2 12h20"></path><circle cx="12" cy="12" r="10"></circle></svg>
             </div>
-            <h3 className="feature-title">Air Quality Index</h3>
-            <p className="feature-desc">Real-time AQI estimation based on weather station data from across Thailand, powered by TMD weather API.</p>
+            <h3 className="feature-title">Weather & AQI Forecast</h3>
+            <p className="feature-desc">Real-time air quality index and current weather conditions for your location, updated every 15 minutes.</p>
           </Link>
 
           <Link href="/features" className="feature-card glass-panel delay-100" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div className="feature-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
             </div>
-            <h3 className="feature-title">Analytics & Trends</h3>
-            <p className="feature-desc">Visualize temperature, humidity, and atmospheric pressure trends across locations in your area.</p>
+            <h3 className="feature-title">7-Day Forecast</h3>
+            <p className="feature-desc">7-day weather forecast with temperature, rain probability, UV index, and PM2.5 predictions powered by Open-Meteo.</p>
           </Link>
 
           <Link href="/dashboard" className="feature-card glass-panel delay-200" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div className="feature-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             </div>
-            <h3 className="feature-title">Smart Dashboard</h3>
-            <p className="feature-desc">A unified view of all your sensor data and database readings, neatly organized for quick insights.</p>
+            <h3 className="feature-title">Sensor Data Analytics</h3>
+            <p className="feature-desc">View and analyze sensor readings from your connected devices, stored in the MySQL database.</p>
           </Link>
 
         </div>

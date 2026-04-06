@@ -27,8 +27,8 @@ export default function RootLayout({
                 <span className="text-gradient">SAM</span> Project
               </Link>
               <nav className="flex gap-4">
-                <Link href="/features" className="btn btn-secondary">Features</Link>
-                <Link href="/dashboard" className="btn btn-primary">Dashboard</Link>
+                <Link href="/features" className="btn btn-secondary">Weather & AQI</Link>
+                <Link href="/dashboard" className="btn btn-primary">Sensor Data Analytics</Link>
               </nav>
             </div>
           </header>

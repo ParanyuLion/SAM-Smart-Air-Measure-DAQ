@@ -77,8 +77,8 @@ export default async function DashboardPage() {
           <DashboardCard
             icon="📡"
             title="Data Source"
-            value="TMD API"
-            subtitle="Thai Meteorological Dept."
+            value="Open-Meteo"
+            subtitle="Global Weather API"
             color="#06b6d4"
           />
           <DashboardCard
