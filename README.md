@@ -1,24 +1,36 @@
 # SAM — Smart Air Measure
 
-Real-time air quality monitoring and analytics web application built with Next.js. Pulls live weather data from the Thai Meteorological Department (TMD) API and estimates Air Quality Index (AQI) based on station observations.
+Real-time air quality monitoring and analytics application. A **Next.js** frontend displays live AQI and weather data fetched through a **FastAPI** backend, which also queries an optional MySQL sensor database.
 
 ## Features
 
-- **Air Quality Analytics** — Real-time AQI estimation using data from 120+ TMD weather stations across Thailand
-- **IP-Based Location Detection** — Automatically finds the nearest weather station to your location
-- **Dashboard** — Unified view of sensor data and MySQL database readings via Prisma ORM
-- **Standard AQI Categories** — Color-coded levels (Good → Hazardous) based on US EPA breakpoints
+- **Air Quality Analytics** — Real-time AQI from [aqicn.org](https://aqicn.org/) with US EPA color-coded levels (Good → Hazardous)
+- **Weather Forecast** — 7-day forecast via [Open-Meteo](https://open-meteo.com/) with WMO weather codes
+- **IP-Based Location Detection** — Automatically detects your location to show local AQI and weather
+- **Sensor Dashboard** — Unified view of MySQL sensor data readings via FastAPI + SQLAlchemy
+
+---
+
+## Architecture
+
+```
+browser  ──►  frontend (Next.js :3000)  ──►  backend (FastAPI :8000)  ──►  external APIs
+                                                      │                       (AQICN, Open-Meteo, ip-api)
+                                                      └──►  MySQL :3306
+```
 
 ---
 
 ## Requirements
 
-| Tool         | Version  | Notes                                      |
-| ------------ | -------- | ------------------------------------------ |
-| **Node.js**  | ≥ 18.x   | Required to run Next.js                    |
-| **npm**      | ≥ 9.x    | Comes with Node.js                         |
-| **MySQL**    | ≥ 8.x    | Optional — dashboard works without it      |
-| **phpMyAdmin** | any    | Optional — for managing the MySQL database |
+| Tool        | Version | Notes                                 |
+| ----------- | ------- | ------------------------------------- |
+| **Node.js** | ≥ 18.x  | Required for the frontend             |
+| **npm**     | ≥ 9.x   | Comes with Node.js                    |
+| **Python**  | ≥ 3.11  | Required for the backend              |
+| **MySQL**   | ≥ 8.x   | Optional — dashboard works without it |
+
+---
 
 ## Getting Started
 
@@ -29,39 +41,41 @@ git clone https://github.com/PhruekCh/SAM-Smart-Air-Measure.git
 cd SAM-Smart-Air-Measure
 ```
 
-### 2. Install dependencies
+### 2. Set up the backend
 
 ```bash
-npm install
+cd backend
+pip install -r requirements.txt
+cp .env.example .env        # then edit .env with your DB credentials
+uvicorn main:app --reload   # runs on http://localhost:8000
 ```
 
-### 3. Configure environment variables
-
-Create a `.env` file in the project root (or edit the existing one):
+Backend `.env` variables:
 
 ```env
-DATABASE_URL="mysql://<username>:<password>@localhost:3306/<database_name>"
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=sam
+AQICN_TOKEN=b8a6d8e234e1e18cbcf2a034e24958eca5aab2c3
 ```
 
-Replace `<username>`, `<password>`, and `<database_name>` with your MySQL credentials.
+> **Note:** If MySQL is not running the API still works — the dashboard will show a "Database Not Connected" status.
 
-> **Note:** If you don't have MySQL running, the app will still work — the dashboard will show a "Database Not Connected" status and all other pages function normally.
-
-### 4. Generate Prisma Client (optional — only if using MySQL)
-
-Make sure your MySQL server is running, then:
+### 3. Set up the frontend
 
 ```bash
-npx prisma generate
-npx prisma db push
+cd frontend
+npm install
+cp .env.example .env.local  # set NEXT_PUBLIC_API_URL if backend is not on :8000
+npm run dev                 # runs on http://localhost:3000
 ```
 
-This creates the database tables defined in `prisma/schema.prisma`.
+Frontend `.env.local` variables:
 
-### 5. Run the development server
-
-```bash
-npm run dev
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -70,50 +84,65 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Pages
 
-| Route          | Description                                                                 |
-| -------------- | --------------------------------------------------------------------------- |
-| `/`            | Landing page with hero section and feature cards                            |
-| `/features`    | Air quality analytics — AQI estimation, nearest station, weather data table |
-| `/dashboard`   | Database status, sensor data placeholders, system overview                  |
+| Route        | Description                                                       |
+| ------------ | ----------------------------------------------------------------- |
+| `/`          | Landing page with hero section and feature cards                  |
+| `/features`  | Real-time AQI, pollutant readings, current weather, 7-day forecast |
+| `/dashboard` | Database connection status and sensor data overview               |
 
-## API Routes
+## API Endpoints (FastAPI)
 
-| Endpoint         | Method | Description                                              |
-| ---------------- | ------ | -------------------------------------------------------- |
-| `/api/weather`   | GET    | Proxies TMD Weather3Hours API (cached 15 min)            |
-| `/api/location`  | GET    | Returns approximate location based on server IP          |
+| Endpoint                | Method | Cache   | Description                              |
+| ----------------------- | ------ | ------- | ---------------------------------------- |
+| `/api/aqi`              | GET    | 10 min  | AQI proxy → aqicn.org (`lat`, `lng`)     |
+| `/api/weather`          | GET    | 15 min  | Weather proxy → Open-Meteo (`lat`, `lon`, `timezone`) |
+| `/api/location`         | GET    | 1 hr    | IP geolocation → ip-api.com              |
+| `/api/dashboard/stats`  | GET    | —       | MySQL `sensor_data` record count         |
+
+Interactive docs available at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 ---
 
 ## Tech Stack
 
-- **Framework:** [Next.js 16](https://nextjs.org/) (App Router + Turbopack)
-- **Language:** TypeScript
-- **Database:** MySQL via [Prisma ORM](https://www.prisma.io/)
-- **Styling:** Vanilla CSS with glassmorphism design
-- **External API:** [TMD Weather3Hours V2](https://data.tmd.go.th/)
+### Backend
+- **[FastAPI](https://fastapi.tiangolo.com/)** — async Python API framework
+- **[SQLAlchemy](https://www.sqlalchemy.org/)** + **PyMySQL** — MySQL ORM
+- **[httpx](https://www.python-httpx.org/)** — async HTTP client for external API proxying
+- **cachetools** — in-memory TTL caching
+
+### Frontend
+- **[Next.js 16](https://nextjs.org/)** (App Router + Turbopack) + TypeScript
+- **React 19**
+- **Vanilla CSS** — glassmorphism design, no UI library
+
+---
 
 ## Project Structure
 
 ```
-daq_project/
-├── prisma/
-│   └── schema.prisma        # Database schema
-├── src/
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── weather/      # TMD weather API proxy
-│   │   │   └── location/     # IP geolocation API
-│   │   ├── dashboard/        # Dashboard page
-│   │   ├── features/         # Air quality analytics page
-│   │   ├── globals.css       # Global styles & design system
-│   │   ├── layout.tsx        # Root layout with navigation
-│   │   └── page.tsx          # Landing page
-│   └── lib/
-│       └── db.ts             # Prisma client singleton
-├── .env                      # Environment variables
-├── package.json
-└── README.md
+SAM-Smart-Air-Measure/
+├── backend/
+│   ├── main.py              # FastAPI app entry point + CORS
+│   ├── database.py          # SQLAlchemy engine + stats query
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── routers/
+│       ├── aqi.py           # GET /api/aqi
+│       ├── weather.py       # GET /api/weather
+│       ├── location.py      # GET /api/location
+│       └── dashboard.py     # GET /api/dashboard/stats
+└── frontend/
+    ├── src/
+    │   └── app/
+    │       ├── features/    # Air quality analytics page
+    │       ├── dashboard/   # Sensor dashboard page
+    │       ├── globals.css  # Global styles & design system
+    │       ├── layout.tsx   # Root layout with navigation
+    │       └── page.tsx     # Landing page
+    ├── public/
+    ├── .env.example
+    └── package.json
 ```
 
 ## License

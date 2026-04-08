@@ -1,16 +1,19 @@
-import { db, dbInitError } from "../../lib/db";
 import Link from "next/link";
 
-async function getDashboardData() {
-  if (!db) {
-    return { connected: false, recordCount: 0, errorMsg: dbInitError || "Database failed to initialize" };
-  }
+interface DashboardStats {
+  connected: boolean;
+  record_count: number;
+  error_msg: string;
+}
+
+async function getDashboardData(): Promise<DashboardStats> {
+  const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
   try {
-    const recordCount = await db.sensor_data.count();
-    return { connected: true, recordCount, errorMsg: "" };
+    const res = await fetch(`${API}/api/dashboard/stats`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
   } catch (e: any) {
-    console.error("Dashboard DB Error:", e);
-    return { connected: false, recordCount: 0, errorMsg: e?.message || String(e) };
+    return { connected: false, record_count: 0, error_msg: e?.message || String(e) };
   }
 }
 
@@ -56,8 +59,8 @@ export default async function DashboardPage() {
               </h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0, wordBreak: 'break-all' }}>
                 {data.connected
-                  ? `Successfully connected via Prisma ORM · ${data.recordCount} sensor data record(s)`
-                  : `Unable to reach MySQL database. URL: ${process.env.DATABASE_URL?.replace(/:([^:@]{1,})@/, ":***@")} | Error: ${data.errorMsg}`}
+                  ? `Successfully connected via FastAPI + SQLAlchemy · ${data.record_count} sensor data record(s)`
+                  : `Unable to reach MySQL database. Error: ${data.error_msg}`}
               </p>
             </div>
           </div>
@@ -70,7 +73,7 @@ export default async function DashboardPage() {
           <DashboardCard
             icon="🗄️"
             title="Database Records"
-            value={data.connected ? `${data.recordCount}` : '—'}
+            value={data.connected ? `${data.record_count}` : '—'}
             subtitle="Sensor data in MySQL"
             color="#6366f1"
           />
@@ -135,8 +138,8 @@ export default async function DashboardPage() {
               }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🗄️</div>
-                  {data.recordCount > 0
-                    ? `${data.recordCount} record(s) found in database`
+                  {data.record_count > 0
+                    ? `${data.record_count} record(s) found in database`
                     : 'Database empty — add records via phpMyAdmin'}
                 </div>
               </div>
@@ -154,7 +157,7 @@ export default async function DashboardPage() {
               }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚠️</div>
-                  Start MySQL & update .env to view records
+                  Start MySQL &amp; update backend/.env to view records
                 </div>
               </div>
             )}
