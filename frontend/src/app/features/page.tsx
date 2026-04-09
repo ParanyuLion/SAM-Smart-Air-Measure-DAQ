@@ -120,9 +120,10 @@ export default function FeaturesPage() {
 
   useEffect(() => {
     async function load() {
+      const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
       try {
         // Step 1: get location by IP (includes timezone)
-        const locRes = await fetch("/api/location");
+        const locRes = await fetch(`${API}/api/location`);
         const locData = await locRes.json();
         const lat = locData.lat ?? 13.75;
         const lon = locData.lon ?? 100.52;
@@ -130,7 +131,7 @@ export default function FeaturesPage() {
         setUserLocation({ lat, lon, city: locData.city || locData.regionName || "Unknown", timezone });
 
         // Step 2: get real AQI from AQICN
-        const aqiRes = await fetch(`/api/aqi?lat=${lat}&lng=${lon}`);
+        const aqiRes = await fetch(`${API}/api/aqi?lat=${lat}&lng=${lon}`);
         const aqiJson = await aqiRes.json();
 
         if (aqiJson.status === "ok" && aqiJson.data) {
@@ -158,7 +159,7 @@ export default function FeaturesPage() {
         }
 
         // Step 3: get Open-Meteo weather data
-        const weatherRes = await fetch(`/api/weather?lat=${lat}&lon=${lon}&timezone=${encodeURIComponent(timezone)}`);
+        const weatherRes = await fetch(`${API}/api/weather?lat=${lat}&lon=${lon}&timezone=${encodeURIComponent(timezone)}`);
         const weatherJson = await weatherRes.json();
 
         if (weatherJson.current) {
