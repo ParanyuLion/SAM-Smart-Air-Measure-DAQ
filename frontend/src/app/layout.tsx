@@ -28,6 +28,7 @@ export default function RootLayout({
               </Link>
               <nav className="flex gap-4">
                 <Link href="/features" className="btn btn-secondary">Weather & AQI</Link>
+                <Link href="/predict" className="btn btn-secondary">Predict</Link>
                 <Link href="/dashboard" className="btn btn-primary">Sensor Data Analytics</Link>
               </nav>
             </div>
