@@ -15,6 +15,9 @@ interface FeatureValues {
   pm25: number;
   pm10: number;
   place: string;
+  ts: string | null;
+  actual_aqi: number | null;
+  actual_ts: string | null;
 }
 
 interface PredictResult {
@@ -251,51 +254,75 @@ export default function PredictPage() {
 
       {/* Result Panel */}
       {result && (() => {
-        const level = getAqiLevel(result.pm25_aqi);
+        const predicted = getAqiLevel(result.pm25_aqi);
+        const actual = features?.actual_aqi != null ? getAqiLevel(features.actual_aqi) : null;
+        const ts = features?.actual_ts ?? null;
         return (
           <div
             className="glass-panel"
-            style={{ padding: "1.5rem", marginBottom: "1.5rem", borderLeft: `4px solid ${level.color}` }}
+            style={{ padding: "1.5rem", marginBottom: "1.5rem", borderLeft: `4px solid ${predicted.color}` }}
           >
-            <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Prediction Result</h2>
-            <div className="flex items-center" style={{ gap: "1.5rem", flexWrap: "wrap" }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "3.5rem", fontWeight: 800, color: level.color, lineHeight: 1 }}>
+            <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Result</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+
+              {/* Predicted */}
+              <div>
+                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
+                  Predicted
+                </div>
+                <div style={{ fontSize: "3rem", fontWeight: 800, color: predicted.color, lineHeight: 1 }}>
                   {result.pm25_aqi}
                 </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.25rem" }}>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "0.25rem 0 0.5rem" }}>
                   PM2.5 AQI
                 </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    background: level.bg,
-                    color: level.color,
-                    border: `1px solid ${level.color}`,
-                    borderRadius: "6px",
-                    padding: "0.3rem 0.75rem",
-                    fontWeight: 700,
-                    fontSize: "1rem",
-                  }}
-                >
-                  {level.label}
-                </span>
-                <span
-                  style={{
-                    display: "inline-block",
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "6px",
-                    padding: "0.25rem 0.6rem",
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  {result.place === "inside" ? "Indoor" : "Outdoor"}
+                <span style={{
+                  display: "inline-block",
+                  background: predicted.bg,
+                  color: predicted.color,
+                  border: `1px solid ${predicted.color}`,
+                  borderRadius: "6px",
+                  padding: "0.25rem 0.65rem",
+                  fontWeight: 700,
+                  fontSize: "0.9rem",
+                }}>
+                  {predicted.label}
                 </span>
               </div>
+
+              {/* Actual */}
+              <div>
+                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
+                  Actual {ts && <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>· {ts.replace("T", " ").slice(0, 16)}</span>}
+                </div>
+                {actual && features?.actual_aqi != null ? (
+                  <>
+                    <div style={{ fontSize: "3rem", fontWeight: 800, color: actual.color, lineHeight: 1 }}>
+                      {features.actual_aqi}
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "0.25rem 0 0.5rem" }}>
+                      PM2.5 AQI
+                    </div>
+                    <span style={{
+                      display: "inline-block",
+                      background: actual.bg,
+                      color: actual.color,
+                      border: `1px solid ${actual.color}`,
+                      borderRadius: "6px",
+                      padding: "0.25rem 0.65rem",
+                      fontWeight: 700,
+                      fontSize: "0.9rem",
+                    }}>
+                      {actual.label}
+                    </span>
+                  </>
+                ) : (
+                  <div style={{ color: "var(--text-secondary)", fontSize: "0.9rem", paddingTop: "0.25rem" }}>
+                    No data available
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
         );

@@ -3,7 +3,7 @@ import numpy as np
 import joblib
 from fastapi import APIRouter
 from pydantic import BaseModel
-from database import get_latest_sensor_row
+from database import get_latest_sensor_row, get_actual_aqi_near_ts
 
 router = APIRouter()
 
@@ -29,6 +29,9 @@ DEFAULTS = {
     "pm25": 15,
     "pm10": 12,
     "place": "inside",
+    "ts": None,
+    "actual_aqi": None,
+    "actual_ts": None,
 }
 
 
@@ -37,6 +40,12 @@ async def get_latest():
     row = get_latest_sensor_row()
     if row is None:
         return DEFAULTS
+
+    ts = row.get("ts")
+
+    # Look up the closest non-null pm25_aqi by timestamp
+    actual_row = get_actual_aqi_near_ts(ts) if ts is not None else None
+
     return {
         "temp": float(row.get("temp", DEFAULTS["temp"])),
         "humidity": int(row.get("humidity", DEFAULTS["humidity"])),
@@ -48,6 +57,9 @@ async def get_latest():
         "pm25": int(row.get("pm25", DEFAULTS["pm25"])),
         "pm10": int(row.get("pm10", DEFAULTS["pm10"])),
         "place": str(row.get("place", DEFAULTS["place"])),
+        "ts": str(ts) if ts is not None else None,
+        "actual_aqi": int(actual_row["pm25"]) if actual_row else None,
+        "actual_ts": str(actual_row["ts"]) if actual_row else None,
     }
 
 
