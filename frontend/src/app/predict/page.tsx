@@ -365,11 +365,21 @@ export default function PredictPage() {
       })()}
 
       {/* Feature Importance */}
-      <div className="glass-panel" style={{ padding: "1.5rem" }}>
+      <div className="glass-panel" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
         <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Feature Importance</h2>
         <img
           src={`${API}/static/feature_importance.png`}
           alt="Feature importance chart for PM2.5 prediction model"
+          style={{ width: "100%", borderRadius: "8px" }}
+        />
+      </div>
+
+      {/* Model Comparison */}
+      <div className="glass-panel" style={{ padding: "1.5rem" }}>
+        <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Model Comparison (5-Fold CV)</h2>
+        <img
+          src={`${API}/static/model_comparison.png`}
+          alt="R² comparison: Random Forest vs Linear Regression"
           style={{ width: "100%", borderRadius: "8px" }}
         />
       </div>
