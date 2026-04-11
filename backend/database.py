@@ -47,3 +47,37 @@ def get_db_stats() -> dict:
             return {"connected": True, "record_count": count, "error_msg": ""}
     except SQLAlchemyError as e:
         return {"connected": False, "record_count": 0, "error_msg": str(e)}
+
+
+def get_latest_sensor_row() -> dict | None:
+    if _engine is None:
+        return None
+    try:
+        with _engine.connect() as conn:
+            row = conn.execute(
+                text("SELECT * FROM sensor_data ORDER BY id DESC LIMIT 1")
+            ).mappings().first()
+            return dict(row) if row else None
+    except SQLAlchemyError:
+        return None
+
+
+def get_actual_aqi_near_ts(ts) -> dict | None:
+    """Return the {pm25, ts} row from aqi_data closest to *ts*."""
+    if _engine is None:
+        return None
+    try:
+        with _engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    "SELECT pm25, ts FROM aqi_data "
+                    "WHERE pm25 IS NOT NULL "
+                    "ORDER BY ABS(TIMESTAMPDIFF(SECOND, ts, :target_ts)) ASC "
+                    "LIMIT 1"
+                ),
+                {"target_ts": ts},
+            ).mappings().first()
+            return dict(row) if row else None
+    except SQLAlchemyError as e:
+        print(f"[predict] get_actual_aqi_near_ts error: {e}")
+        return None
