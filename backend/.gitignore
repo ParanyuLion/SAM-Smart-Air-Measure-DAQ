@@ -33,6 +33,8 @@ coverage.xml
 # Jupyter
 .ipynb_checkpoints/
 
+docs/
+
 # ML model artifacts
 models/
 static/
