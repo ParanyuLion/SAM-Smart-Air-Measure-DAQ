@@ -33,7 +33,7 @@ export default function RootLayout({
               </nav>
             </div>
           </header>
-          <main>
+          <main style={{ paddingTop: '6rem' }}>
             {children}
           </main>
         </div>

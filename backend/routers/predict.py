@@ -1,7 +1,7 @@
 from pathlib import Path
 import numpy as np
 import joblib
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from database import get_latest_sensor_row, get_actual_aqi_near_ts
 
@@ -58,6 +58,15 @@ async def get_latest():
         "pm10": int(row.get("pm10", DEFAULTS["pm10"])),
         "place": str(row.get("place", DEFAULTS["place"])),
         "ts": str(ts) if ts is not None else None,
+        "actual_aqi": int(actual_row["pm25"]) if actual_row else None,
+        "actual_ts": str(actual_row["ts"]) if actual_row else None,
+    }
+
+
+@router.get("/predict/actual")
+async def get_actual(ts: str = Query(...)):
+    actual_row = get_actual_aqi_near_ts(ts)
+    return {
         "actual_aqi": int(actual_row["pm25"]) if actual_row else None,
         "actual_ts": str(actual_row["ts"]) if actual_row else None,
     }

@@ -46,9 +46,10 @@ function getAqiLevel(aqi: number): AqiLevel {
   return AQI_LEVELS.find((l) => aqi >= l.min && aqi <= l.max) ?? AQI_LEVELS[AQI_LEVELS.length - 1];
 }
 
-type NumericFeatureKey = Exclude<keyof FeatureValues, "place_enc" | "place">;
+type NumericFeatureKey = Exclude<keyof FeatureValues, "place_enc" | "place" | "ts" | "actual_aqi" | "actual_ts">;
 
-const FEATURE_ROWS: { key: NumericFeatureKey | "place_enc"; label: string; unit: string; step: string }[] = [
+const FEATURE_ROWS: { key: NumericFeatureKey | "place_enc" | "ts"; label: string; unit: string; step: string }[] = [
+  { key: "ts",            label: "Timestamp",             unit: "",      step: ""    },
   { key: "temp",          label: "Temperature (sensor)",  unit: "°C",    step: "0.1" },
   { key: "humidity",      label: "Humidity (sensor)",     unit: "%",     step: "1"   },
   { key: "gas_co",        label: "CO Gas",                unit: "ppm",   step: "1"   },
@@ -125,6 +126,20 @@ export default function PredictPage() {
     setFeatures({ ...features, place_enc: value, place: value });
   };
 
+  const handleTsChange = async (value: string) => {
+    if (!features) return;
+    // datetime-local gives "2026-04-09T08:45" → convert to "2026-04-09 08:45:00"
+    const tsForDb = value.replace("T", " ") + ":00";
+    setFeatures({ ...features, ts: tsForDb, actual_aqi: null, actual_ts: null });
+    try {
+      const res = await fetch(`${API}/api/predict/actual?ts=${encodeURIComponent(tsForDb)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setFeatures((prev) => prev ? { ...prev, actual_aqi: data.actual_aqi, actual_ts: data.actual_ts } : null);
+      }
+    } catch { /* silently ignore */ }
+  };
+
   const toggleMode = () => {
     if (mode === "edit") {
       fetchLatest();
@@ -183,7 +198,20 @@ export default function PredictPage() {
                   <td style={{ padding: "0.5rem 0.75rem" }}>{label}</td>
                   <td style={{ padding: "0.5rem 0.75rem", textAlign: "right" }}>
                     {mode === "edit" ? (
-                      key === "place_enc" ? (
+                      key === "ts" ? (
+                        <input
+                          type="datetime-local"
+                          value={(features.ts ?? "").replace(" ", "T").slice(0, 16)}
+                          onChange={(e) => handleTsChange(e.target.value)}
+                          style={{
+                            background: "var(--surface)",
+                            color: "var(--text-primary)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "4px",
+                            padding: "0.2rem 0.4rem",
+                          }}
+                        />
+                      ) : key === "place_enc" ? (
                         <select
                           value={features.place_enc}
                           onChange={(e) => handlePlaceChange(e.target.value)}
@@ -216,7 +244,11 @@ export default function PredictPage() {
                         />
                       )
                     ) : (
-                      key === "place_enc" ? (
+                      key === "ts" ? (
+                        <span style={{ fontWeight: 600, color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                          {features.ts ? features.ts.slice(0, 16) : "—"}
+                        </span>
+                      ) : key === "place_enc" ? (
                         <span style={{ fontWeight: 600 }}>
                           {features.place_enc === "inside" ? "Inside" : "Outdoor"}
                         </span>
