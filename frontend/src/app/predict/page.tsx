@@ -21,7 +21,8 @@ interface FeatureValues {
 }
 
 interface PredictResult {
-  pm25_aqi: number;
+  pm25_aqi_rf:  number | null;
+  pm25_aqi_mlr: number | null;
   place: string;
 }
 
@@ -286,75 +287,78 @@ export default function PredictPage() {
 
       {/* Result Panel */}
       {result && (() => {
-        const predicted = getAqiLevel(result.pm25_aqi);
-        const actual = features?.actual_aqi != null ? getAqiLevel(features.actual_aqi) : null;
-        const ts = features?.actual_ts ?? null;
-        return (
-          <div
-            className="glass-panel"
-            style={{ padding: "1.5rem", marginBottom: "1.5rem", borderLeft: `4px solid ${predicted.color}` }}
-          >
-            <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Result</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+        const rfLevel  = result.pm25_aqi_rf  != null ? getAqiLevel(result.pm25_aqi_rf)  : null;
+        const mlrLevel = result.pm25_aqi_mlr != null ? getAqiLevel(result.pm25_aqi_mlr) : null;
+        const actual   = features?.actual_aqi != null ? getAqiLevel(features.actual_aqi) : null;
+        const ts       = features?.actual_ts ?? null;
+        const borderColor = rfLevel?.color ?? "var(--border)";
 
-              {/* Predicted */}
+        return (
+          <div className="glass-panel" style={{ padding: "1.5rem", marginBottom: "1.5rem", borderLeft: `4px solid ${borderColor}` }}>
+            <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "1rem" }}>Prediction Result</h2>
+
+            {/* 3-col: RF | MLR | Actual */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1.25rem", marginBottom: "1.25rem" }}>
+
+              {/* RF */}
               <div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
-                  Predicted
+                <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
+                  Random Forest
                 </div>
-                <div style={{ fontSize: "3rem", fontWeight: 800, color: predicted.color, lineHeight: 1 }}>
-                  {result.pm25_aqi}
+                {rfLevel && result.pm25_aqi_rf != null ? (
+                  <>
+                    <div style={{ fontSize: "2.75rem", fontWeight: 800, color: rfLevel.color, lineHeight: 1 }}>{result.pm25_aqi_rf}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", margin: "0.2rem 0 0.4rem" }}>PM2.5 AQI</div>
+                    <span style={{ display: "inline-block", background: rfLevel.bg, color: rfLevel.color, border: `1px solid ${rfLevel.color}`, borderRadius: "6px", padding: "0.2rem 0.55rem", fontWeight: 700, fontSize: "0.85rem" }}>
+                      {rfLevel.label}
+                    </span>
+                  </>
+                ) : <div style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Unavailable</div>}
+              </div>
+
+              {/* MLR */}
+              <div>
+                <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
+                  Linear Regression
                 </div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "0.25rem 0 0.5rem" }}>
-                  PM2.5 AQI
-                </div>
-                <span style={{
-                  display: "inline-block",
-                  background: predicted.bg,
-                  color: predicted.color,
-                  border: `1px solid ${predicted.color}`,
-                  borderRadius: "6px",
-                  padding: "0.25rem 0.65rem",
-                  fontWeight: 700,
-                  fontSize: "0.9rem",
-                }}>
-                  {predicted.label}
-                </span>
+                {mlrLevel && result.pm25_aqi_mlr != null ? (
+                  <>
+                    <div style={{ fontSize: "2.75rem", fontWeight: 800, color: mlrLevel.color, lineHeight: 1 }}>{result.pm25_aqi_mlr}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", margin: "0.2rem 0 0.4rem" }}>PM2.5 AQI</div>
+                    <span style={{ display: "inline-block", background: mlrLevel.bg, color: mlrLevel.color, border: `1px solid ${mlrLevel.color}`, borderRadius: "6px", padding: "0.2rem 0.55rem", fontWeight: 700, fontSize: "0.85rem" }}>
+                      {mlrLevel.label}
+                    </span>
+                  </>
+                ) : <div style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Unavailable</div>}
               </div>
 
               {/* Actual */}
               <div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
+                <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
                   Actual {ts && <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>· {ts.replace("T", " ").slice(0, 16)}</span>}
                 </div>
                 {actual && features?.actual_aqi != null ? (
                   <>
-                    <div style={{ fontSize: "3rem", fontWeight: 800, color: actual.color, lineHeight: 1 }}>
-                      {features.actual_aqi}
-                    </div>
-                    <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "0.25rem 0 0.5rem" }}>
-                      PM2.5 AQI
-                    </div>
-                    <span style={{
-                      display: "inline-block",
-                      background: actual.bg,
-                      color: actual.color,
-                      border: `1px solid ${actual.color}`,
-                      borderRadius: "6px",
-                      padding: "0.25rem 0.65rem",
-                      fontWeight: 700,
-                      fontSize: "0.9rem",
-                    }}>
+                    <div style={{ fontSize: "2.75rem", fontWeight: 800, color: actual.color, lineHeight: 1 }}>{features.actual_aqi}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", margin: "0.2rem 0 0.4rem" }}>PM2.5 AQI</div>
+                    <span style={{ display: "inline-block", background: actual.bg, color: actual.color, border: `1px solid ${actual.color}`, borderRadius: "6px", padding: "0.2rem 0.55rem", fontWeight: 700, fontSize: "0.85rem" }}>
                       {actual.label}
                     </span>
                   </>
                 ) : (
-                  <div style={{ color: "var(--text-secondary)", fontSize: "0.9rem", paddingTop: "0.25rem" }}>
-                    No data available
-                  </div>
+                  <div style={{ color: "var(--text-secondary)", fontSize: "0.9rem", paddingTop: "0.25rem" }}>No data</div>
                 )}
               </div>
 
+            </div>
+
+            {/* Model performance */}
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.85rem", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+              Model Performance:&nbsp;
+              <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>RF (R² = 0.86)</span>
+              &nbsp;|&nbsp;
+              <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>MLR (R² = 0.61)</span>
+              &nbsp;· Random Forest captures non-linear interactions (+0.25 R²)
             </div>
           </div>
         );

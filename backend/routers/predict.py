@@ -7,14 +7,21 @@ from database import get_latest_sensor_row, get_actual_aqi_near_ts
 
 router = APIRouter()
 
-MODEL_PATH = Path(__file__).parent.parent / "models" / "rf_model.pkl"
+RF_MODEL_PATH  = Path(__file__).parent.parent / "models" / "rf_model.pkl"
+MLR_MODEL_PATH = Path(__file__).parent.parent / "models" / "mlr_model.pkl"
 
-_model = None
+_rf_model  = None
+_mlr_model = None
 try:
-    _model = joblib.load(MODEL_PATH)
-    print(f"[predict] Model loaded from {MODEL_PATH}")
+    _rf_model = joblib.load(RF_MODEL_PATH)
+    print(f"[predict] RF model loaded from {RF_MODEL_PATH}")
 except Exception as e:
-    print(f"[predict] Failed to load model: {e}")
+    print(f"[predict] Failed to load RF model: {e}")
+try:
+    _mlr_model = joblib.load(MLR_MODEL_PATH)
+    print(f"[predict] MLR model loaded from {MLR_MODEL_PATH}")
+except Exception as e:
+    print(f"[predict] Failed to load MLR model: {e}")
 
 PLACE_ENC = {"inside": 0, "outdoor": 1}
 
@@ -92,5 +99,6 @@ async def predict(req: PredictRequest):
         req.temp_tmd, req.humidity_tmd, req.rainfall_tmd,
         place_int, req.pm25, req.pm10,
     ]])
-    pm25_aqi = int(round(float(_model.predict(features)[0])))
-    return {"pm25_aqi": pm25_aqi, "place": req.place_enc}
+    rf_aqi  = int(round(float(_rf_model.predict(features)[0])))  if _rf_model  else None
+    mlr_aqi = int(round(float(_mlr_model.predict(features)[0]))) if _mlr_model else None
+    return {"pm25_aqi_rf": rf_aqi, "pm25_aqi_mlr": mlr_aqi, "place": req.place_enc}
