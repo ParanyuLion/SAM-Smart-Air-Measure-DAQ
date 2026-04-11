@@ -47,3 +47,16 @@ def get_db_stats() -> dict:
             return {"connected": True, "record_count": count, "error_msg": ""}
     except SQLAlchemyError as e:
         return {"connected": False, "record_count": 0, "error_msg": str(e)}
+
+
+def get_latest_sensor_row() -> dict | None:
+    if _engine is None:
+        return None
+    try:
+        with _engine.connect() as conn:
+            row = conn.execute(
+                text("SELECT * FROM sensor_data ORDER BY id DESC LIMIT 1")
+            ).mappings().first()
+            return dict(row) if row else None
+    except SQLAlchemyError:
+        return None
