@@ -87,35 +87,44 @@ export default function PredictPage() {
 
   useEffect(() => { fetchLatest(); }, []);
 
-  const handlePredict = async () => {
-    if (!features) return;
-    setPredicting(true);
-    setError(null);
-    try {
-      const res = await fetch(`${API}/api/predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          temp: features.temp,
-          humidity: features.humidity,
-          gas_co: features.gas_co,
-          temp_tmd: features.temp_tmd,
-          humidity_tmd: features.humidity_tmd,
-          rainfall_tmd: features.rainfall_tmd,
-          place_enc: features.place_enc,
-          pm25: features.pm25,
-          pm10: features.pm10,
-        }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: PredictResult = await res.json();
-      setResult(data);
-    } catch {
-      setError("Prediction failed. Is the backend running?");
-    } finally {
-      setPredicting(false);
+  useEffect(() => {
+    const doPredict = async () => {
+      if (!features) return;
+      setPredicting(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API}/api/predict`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            temp: features.temp,
+            humidity: features.humidity,
+            gas_co: features.gas_co,
+            temp_tmd: features.temp_tmd,
+            humidity_tmd: features.humidity_tmd,
+            rainfall_tmd: features.rainfall_tmd,
+            place_enc: features.place_enc,
+            pm25: features.pm25,
+            pm10: features.pm10,
+          }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: PredictResult = await res.json();
+        setResult(data);
+      } catch {
+        setError("Prediction failed. Is the backend running?");
+      } finally {
+        setPredicting(false);
+      }
+    };
+
+    if (features) {
+      const timer = setTimeout(() => {
+        doPredict();
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [features]);
 
   const handleNumberChange = (key: NumericFeatureKey, value: string) => {
     if (!features) return;
@@ -273,16 +282,6 @@ export default function PredictPage() {
           <p style={{ color: "#dc2626", marginTop: "0.75rem", fontSize: "0.9rem" }}>{error}</p>
         )}
 
-        <div style={{ marginTop: "1.25rem" }}>
-          <button
-            className="btn btn-primary"
-            onClick={handlePredict}
-            disabled={!features || predicting}
-            style={{ minWidth: "140px" }}
-          >
-            {predicting ? "Predicting..." : "Predict AQI"}
-          </button>
-        </div>
       </div>
 
       {/* Result Panel */}
