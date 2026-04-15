@@ -36,7 +36,7 @@ export default function Home() {
             <p className="feature-desc">7-day weather forecast with temperature, rain probability, UV index, and PM2.5 predictions powered by Open-Meteo.</p>
           </Link>
 
-          <Link href="/dashboard" className="feature-card glass-panel delay-200" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link href="/predict" className="feature-card glass-panel delay-200" style={{ textDecoration: 'none', color: 'inherit' }}>
             <div className="feature-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             </div>
