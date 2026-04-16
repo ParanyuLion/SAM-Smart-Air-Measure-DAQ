@@ -764,6 +764,78 @@ export default function PredictPage() {
           style={{ width: "100%", borderRadius: "8px" }}
         />
       </div>
+
+      {/* Residual Analysis */}
+      <div
+        className="glass-panel"
+        style={{
+          padding: "1.5rem",
+          marginTop: "1.5rem",
+          marginBottom: "1.5rem",
+        }}
+      >
+        <h2
+          style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem" }}
+        >
+          Residual Analysis
+        </h2>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "1rem",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--text-secondary)",
+                marginBottom: "0.5rem",
+              }}
+            >
+              Predicted vs Actual (45° line)
+            </p>
+            <img
+              src={`${API}/static/residual_predicted_vs_actual.png`}
+              alt="Predicted vs Actual scatter plot with 45-degree reference line"
+              onClick={() =>
+                setExpandedImage({
+                  src: `${API}/static/residual_predicted_vs_actual.png`,
+                  alt: "Predicted vs Actual scatter plot with 45-degree reference line",
+                  title: "Predicted vs Actual (Random Forest)",
+                })
+              }
+              style={{ width: "100%", borderRadius: "8px", cursor: "zoom-in" }}
+            />
+          </div>
+
+          <div>
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--text-secondary)",
+                marginBottom: "0.5rem",
+              }}
+            >
+              Error Distribution (Actual - Predicted)
+            </p>
+            <img
+              src={`${API}/static/residual_error_distribution.png`}
+              alt="Histogram of residuals actual minus predicted"
+              onClick={() =>
+                setExpandedImage({
+                  src: `${API}/static/residual_error_distribution.png`,
+                  alt: "Histogram of residuals actual minus predicted",
+                  title: "Error Distribution (Actual - Predicted)",
+                })
+              }
+              style={{ width: "100%", borderRadius: "8px", cursor: "zoom-in" }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Sensor Data Analytics Graph */}
       <div
         className="glass-panel"
