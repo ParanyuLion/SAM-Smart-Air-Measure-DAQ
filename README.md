@@ -60,6 +60,13 @@ Related files:
 - `kidbright/board2.py`
 - `kidbright/config.py`
 
+## Sensors Used
+
+- **Digital Temperature Sensor (KY-028)** - measures temperature
+- **Temperature and Humidity Sensor (KY-015)** - measures humidity
+- **CO Sensor (MQ-9)** - detects carbon monoxide concentration
+- **Dust Sensor (PMS7003)** - measures particulate matter such as PM2.5
+
 ## Requirements
 
 - Node.js 18+
