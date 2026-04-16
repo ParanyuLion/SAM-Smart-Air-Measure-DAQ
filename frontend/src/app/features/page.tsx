@@ -14,12 +14,12 @@ interface AqiLevel {
 }
 
 const AQI_LEVELS: AqiLevel[] = [
-  { label: "Good",                    color: "#16a34a", bg: "rgba(22,163,74,0.12)",   min: 0,   max: 50,  advice: "Air quality is satisfactory. Enjoy outdoor activities." },
-  { label: "Moderate",                color: "#ca8a04", bg: "rgba(202,138,4,0.12)",   min: 51,  max: 100, advice: "Acceptable quality. Unusually sensitive people should limit outdoor exertion." },
-  { label: "Unhealthy for Sensitive", color: "#ea580c", bg: "rgba(234,88,12,0.12)",   min: 101, max: 150, advice: "Sensitive groups may experience health effects. General public less likely affected." },
-  { label: "Unhealthy",               color: "#dc2626", bg: "rgba(220,38,38,0.12)",   min: 151, max: 200, advice: "Everyone may begin to experience health effects. Sensitive groups more seriously." },
-  { label: "Very Unhealthy",          color: "#7c3aed", bg: "rgba(124,58,237,0.12)",  min: 201, max: 300, advice: "Health alert: everyone may experience serious health effects." },
-  { label: "Hazardous",               color: "#991b1b", bg: "rgba(153,27,27,0.18)",   min: 301, max: 500, advice: "Health warning of emergency conditions. Entire population is likely to be affected." },
+  { label: "Good", color: "#16a34a", bg: "rgba(22,163,74,0.12)", min: 0, max: 50, advice: "Air quality is satisfactory. Enjoy outdoor activities." },
+  { label: "Moderate", color: "#ca8a04", bg: "rgba(202,138,4,0.12)", min: 51, max: 100, advice: "Acceptable quality. Unusually sensitive people should limit outdoor exertion." },
+  { label: "Unhealthy for Sensitive", color: "#ea580c", bg: "rgba(234,88,12,0.12)", min: 101, max: 150, advice: "Sensitive groups may experience health effects. General public less likely affected." },
+  { label: "Unhealthy", color: "#dc2626", bg: "rgba(220,38,38,0.12)", min: 151, max: 200, advice: "Everyone may begin to experience health effects. Sensitive groups more seriously." },
+  { label: "Very Unhealthy", color: "#7c3aed", bg: "rgba(124,58,237,0.12)", min: 201, max: 300, advice: "Health alert: everyone may experience serious health effects." },
+  { label: "Hazardous", color: "#991b1b", bg: "rgba(153,27,27,0.18)", min: 301, max: 500, advice: "Health warning of emergency conditions. Entire population is likely to be affected." },
 ];
 
 function getAqiLevel(aqi: number): AqiLevel {
@@ -28,10 +28,10 @@ function getAqiLevel(aqi: number): AqiLevel {
 
 /* ─── WMO Weather Code → Icon & Label ─── */
 const WMO_CODES: Record<number, { icon: string; label: string }> = {
-  0:  { icon: "☀️", label: "Clear sky" },
-  1:  { icon: "🌤️", label: "Mainly clear" },
-  2:  { icon: "⛅", label: "Partly cloudy" },
-  3:  { icon: "☁️", label: "Overcast" },
+  0: { icon: "☀️", label: "Clear sky" },
+  1: { icon: "🌤️", label: "Mainly clear" },
+  2: { icon: "⛅", label: "Partly cloudy" },
+  3: { icon: "☁️", label: "Overcast" },
   45: { icon: "🌫️", label: "Fog" },
   48: { icon: "🌫️", label: "Depositing rime fog" },
   51: { icon: "🌦️", label: "Light drizzle" },
@@ -226,7 +226,7 @@ export default function FeaturesPage() {
       {/* Page Header */}
       <section className="fade-in-up" style={{ marginBottom: "3rem" }}>
         <h1 className="hero-title" style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)" }}>
-          Air Quality <span className="text-gradient">Analytics</span>
+          Air Quality <span className="text-gradient">Monitor</span>
         </h1>
         <p className="hero-subtitle" style={{ textAlign: "left", marginBottom: "0" }}>
           Real-time AQI data from <a href="https://aqicn.org/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", fontWeight: 600 }}>aqicn.org</a> + weather data from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", fontWeight: 600 }}>Open-Meteo</a>.
