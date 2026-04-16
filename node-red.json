@@ -1,0 +1,345 @@
+[
+    {
+        "id": "5add7287bbab49dd",
+        "type": "tab",
+        "label": "Flow 3",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "f8c0ce8d5129a289",
+        "type": "mqtt in",
+        "z": "5add7287bbab49dd",
+        "name": "",
+        "topic": "b6710545784/sam/sensor/combined",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "902041a09fe4de9c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 190,
+        "y": 200,
+        "wires": [
+            [
+                "4713e765632cf826",
+                "f50b81e6f7034e25"
+            ]
+        ]
+    },
+    {
+        "id": "f50b81e6f7034e25",
+        "type": "template",
+        "z": "5add7287bbab49dd",
+        "name": "",
+        "field": "topic",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "INSERT INTO sensor_data (place, temp_dht, temp_ky, humidity, pm10, pm25, pm100, co_raw, smoke_raw, lat, lon) \nVALUES ('{{payload.place}}',\n   {{payload.b1.temp_dht}},\n   {{payload.b1.temp_ky}},\n   {{payload.b1.humidity}},\n   {{payload.b1.pm10}},\n   {{payload.b1.pm25}},\n   {{payload.b1.pm100}},\n   {{payload.b2.co_raw}},\n   {{payload.b2.smoke_raw}},\n   {{payload.b1.lat}},\n   {{payload.b1.lon}}\n);",
+        "output": "str",
+        "x": 500,
+        "y": 200,
+        "wires": [
+            [
+                "19774fe55adb01b0"
+            ]
+        ]
+    },
+    {
+        "id": "4713e765632cf826",
+        "type": "debug",
+        "z": "5add7287bbab49dd",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 540,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "78ed1519a659986b",
+        "type": "inject",
+        "z": "5add7287bbab49dd",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "3600",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 280,
+        "wires": [
+            [
+                "8d61257b96869717"
+            ]
+        ]
+    },
+    {
+        "id": "8d61257b96869717",
+        "type": "http request",
+        "z": "5add7287bbab49dd",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://api.waqi.info/feed/A507451/?token=5d0fd0260354d62de46bcbf4554f1fb9f55fc7d0",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 300,
+        "y": 280,
+        "wires": [
+            [
+                "026a59aa57960d5a",
+                "7b462459cbae8311"
+            ]
+        ]
+    },
+    {
+        "id": "7b462459cbae8311",
+        "type": "debug",
+        "z": "5add7287bbab49dd",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "d2b59b5042243851",
+        "type": "inject",
+        "z": "5add7287bbab49dd",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "10800",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 110,
+        "y": 360,
+        "wires": [
+            [
+                "bad9f53dc4ea8c60"
+            ]
+        ]
+    },
+    {
+        "id": "bad9f53dc4ea8c60",
+        "type": "http request",
+        "z": "5add7287bbab49dd",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://data.tmd.go.th/api/Weather3Hours/V2/?uid=api&ukey=api12345&format=json",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 290,
+        "y": 360,
+        "wires": [
+            [
+                "1fc95b24dc8656c2",
+                "e141035e63cf8cc7"
+            ]
+        ]
+    },
+    {
+        "id": "1fc95b24dc8656c2",
+        "type": "debug",
+        "z": "5add7287bbab49dd",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 500,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "c5f7f29352e45f9e",
+        "type": "mysql",
+        "z": "5add7287bbab49dd",
+        "mydb": "c40260112d76b515",
+        "name": "",
+        "x": 920,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "026a59aa57960d5a",
+        "type": "template",
+        "z": "5add7287bbab49dd",
+        "name": "",
+        "field": "topic",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "INSERT INTO aqi_data (ts, pm10, pm25, lat, lon) \nVALUES (\n    '{{payload.data.time.s}}',\n    {{payload.data.iaqi.pm10.v}}, \n    {{payload.data.iaqi.pm25.v}}, \n    {{payload.data.city.geo.0}}, \n    {{payload.data.city.geo.1}}\n);",
+        "output": "str",
+        "x": 540,
+        "y": 260,
+        "wires": [
+            [
+                "19774fe55adb01b0"
+            ]
+        ]
+    },
+    {
+        "id": "ad86499a17e59ee3",
+        "type": "template",
+        "z": "5add7287bbab49dd",
+        "name": "",
+        "field": "topic",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "INSERT INTO tmd_data (temp, ts, humidity, rainfall, lat, lon) \nVALUES (\n    {{payload.temp}}, \n    STR_TO_DATE('{{{payload.ts}}}', '%m/%d/%Y %H:%i:%s'),\n    {{payload.hum}}, \n    {{payload.rain}}, \n    {{payload.lat}}, \n    {{payload.lon}}\n);",
+        "output": "str",
+        "x": 640,
+        "y": 420,
+        "wires": [
+            [
+                "19774fe55adb01b0"
+            ]
+        ]
+    },
+    {
+        "id": "e141035e63cf8cc7",
+        "type": "function",
+        "z": "5add7287bbab49dd",
+        "name": "function 4",
+        "func": "let data = msg.payload.Stations.Station[82];\nlet obs = data.Observation;\n\nmsg.payload = {\n    temp: obs.AirTemperature,\n    ts: obs.DateTime,\n    hum: obs.RelativeHumidity,\n    rain: obs.Rainfall,\n    lat: data.Latitude,\n    lon: data.Longitude\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 380,
+        "wires": [
+            [
+                "ad86499a17e59ee3"
+            ]
+        ]
+    },
+    {
+        "id": "19774fe55adb01b0",
+        "type": "delay",
+        "z": "5add7287bbab49dd",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 770,
+        "y": 200,
+        "wires": [
+            [
+                "c5f7f29352e45f9e"
+            ]
+        ]
+    },
+    {
+        "id": "902041a09fe4de9c",
+        "type": "mqtt-broker",
+        "name": "iot",
+        "broker": "iot.cpe.ku.ac.th",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "b6710545784/sensor",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "c40260112d76b515",
+        "type": "MySQLdatabase",
+        "name": "b6710545784",
+        "host": "iot.cpe.ku.ac.th",
+        "port": "3306",
+        "db": "b6710545784",
+        "tz": "",
+        "charset": "UTF8"
+    }
+]
