@@ -27,6 +27,13 @@ interface PredictResult {
   place: string;
 }
 
+interface ModelMetrics {
+  rf_r2: number | null;
+  mlr_r2: number | null;
+  n_features: number | null;
+  n_samples: number | null;
+}
+
 interface AqiLevel {
   label: string;
   color: string;
@@ -127,6 +134,7 @@ export default function PredictPage() {
     null,
   );
   const [isMounted, setIsMounted] = useState(false);
+  const [metrics, setMetrics] = useState<ModelMetrics>({ rf_r2: null, mlr_r2: null, n_features: null, n_samples: null });
 
   useEffect(() => {
     setIsMounted(true);
@@ -149,6 +157,10 @@ export default function PredictPage() {
 
   useEffect(() => {
     fetchLatest();
+    fetch(`${API}/api/predict/metrics`)
+      .then((r) => r.json())
+      .then((d: ModelMetrics) => setMetrics(d))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -285,7 +297,7 @@ export default function PredictPage() {
             <span className="text-gradient">PM2.5 AQI</span> Prediction
           </h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-            Random Forest · R² = 0.86 · 9 features
+            Random Forest · R² = {metrics.rf_r2 ?? "—"} · {metrics.n_features ?? 9} features
           </p>
         </div>
         <button className="btn btn-secondary" onClick={toggleMode}>
@@ -725,14 +737,15 @@ export default function PredictPage() {
               >
                 Model Performance:&nbsp;
                 <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>
-                  RF (R² = 0.86)
+                  RF (R² = {metrics.rf_r2 ?? "—"})
                 </span>
                 &nbsp;|&nbsp;
                 <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>
-                  MLR (R² = 0.61)
+                  MLR (R² = {metrics.mlr_r2 ?? "—"})
                 </span>
-                &nbsp;· Random Forest captures non-linear interactions (+0.25
-                R²)
+                {metrics.rf_r2 != null && metrics.mlr_r2 != null && (
+                  <>&nbsp;· Random Forest captures non-linear interactions (+{(metrics.rf_r2 - metrics.mlr_r2).toFixed(2)} R²)</>
+                )}
               </div>
             </div>
           );
@@ -777,7 +790,7 @@ export default function PredictPage() {
         <h2
           style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem" }}
         >
-          Residual Analysis
+          Random Forest Residual Analysis
         </h2>
         <div
           style={{

@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import numpy as np
 import joblib
 from fastapi import APIRouter, Query
@@ -7,8 +8,9 @@ from database import get_latest_sensor_row, get_actual_aqi_near_ts
 
 router = APIRouter()
 
-RF_MODEL_PATH  = Path(__file__).parent.parent / "models" / "rf_model.pkl"
-MLR_MODEL_PATH = Path(__file__).parent.parent / "models" / "mlr_model.pkl"
+RF_MODEL_PATH      = Path(__file__).parent.parent / "models" / "rf_model.pkl"
+MLR_MODEL_PATH     = Path(__file__).parent.parent / "models" / "mlr_model.pkl"
+METRICS_PATH       = Path(__file__).parent.parent / "models" / "metrics.json"
 
 _rf_model  = None
 _mlr_model = None
@@ -40,6 +42,15 @@ DEFAULTS = {
     "actual_aqi": None,
     "actual_ts": None,
 }
+
+
+@router.get("/predict/metrics")
+async def get_metrics():
+    try:
+        with open(METRICS_PATH) as f:
+            return json.load(f)
+    except Exception:
+        return {"rf_r2": None, "mlr_r2": None, "n_features": None, "n_samples": None}
 
 
 @router.get("/predict/latest")
