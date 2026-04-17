@@ -1,8 +1,10 @@
 import os
+import json
 import shutil
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import KFold, cross_val_score
 from sklearn.preprocessing import LabelEncoder
 import joblib
 
@@ -26,15 +28,19 @@ X = data[FEATURE_COLS]
 y = data[TARGET]
 print(f'Training on {len(data)} rows, {len(FEATURE_COLS)} features')
 
+kf = KFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
+
 rf_model = RandomForestRegressor(n_estimators=100, max_depth=5, random_state=RANDOM_STATE)
 rf_model.fit(X, y)
 rf_r2 = rf_model.score(X, y)
-print(f'RF  Training R2 (full dataset): {rf_r2:.4f}')
+rf_cv_r2 = cross_val_score(rf_model, X, y, cv=kf, scoring='r2').mean()
+print(f'RF  Training R2: {rf_r2:.4f}  |  CV R2 (5-fold): {rf_cv_r2:.4f}')
 
 mlr_model = LinearRegression()
 mlr_model.fit(X, y)
 mlr_r2 = mlr_model.score(X, y)
-print(f'MLR Training R2 (full dataset): {mlr_r2:.4f}')
+mlr_cv_r2 = cross_val_score(mlr_model, X, y, cv=kf, scoring='r2').mean()
+print(f'MLR Training R2: {mlr_r2:.4f}  |  CV R2 (5-fold): {mlr_cv_r2:.4f}')
 
 os.makedirs('../backend/models', exist_ok=True)
 joblib.dump(rf_model, '../backend/models/rf_model.pkl')
@@ -42,8 +48,14 @@ print('Saved -> ../backend/models/rf_model.pkl')
 joblib.dump(mlr_model, '../backend/models/mlr_model.pkl')
 print('Saved -> ../backend/models/mlr_model.pkl')
 
-import json
-metrics = {"rf_r2": round(rf_r2, 4), "mlr_r2": round(mlr_r2, 4), "n_features": len(FEATURE_COLS), "n_samples": len(data)}
+metrics = {
+    "rf_r2": round(rf_r2, 4),
+    "rf_cv_r2": round(rf_cv_r2, 4),
+    "mlr_r2": round(mlr_r2, 4),
+    "mlr_cv_r2": round(mlr_cv_r2, 4),
+    "n_features": len(FEATURE_COLS),
+    "n_samples": len(data),
+}
 with open('../backend/models/metrics.json', 'w') as f:
     json.dump(metrics, f)
 print(f'Saved -> ../backend/models/metrics.json  {metrics}')

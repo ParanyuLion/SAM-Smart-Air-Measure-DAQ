@@ -29,7 +29,9 @@ interface PredictResult {
 
 interface ModelMetrics {
   rf_r2: number | null;
+  rf_cv_r2: number | null;
   mlr_r2: number | null;
+  mlr_cv_r2: number | null;
   n_features: number | null;
   n_samples: number | null;
 }
@@ -134,7 +136,7 @@ export default function PredictPage() {
     null,
   );
   const [isMounted, setIsMounted] = useState(false);
-  const [metrics, setMetrics] = useState<ModelMetrics>({ rf_r2: null, mlr_r2: null, n_features: null, n_samples: null });
+  const [metrics, setMetrics] = useState<ModelMetrics>({ rf_r2: null, rf_cv_r2: null, mlr_r2: null, mlr_cv_r2: null, n_features: null, n_samples: null });
 
   useEffect(() => {
     setIsMounted(true);
@@ -297,7 +299,7 @@ export default function PredictPage() {
             <span className="text-gradient">PM2.5 AQI</span> Prediction
           </h1>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-            Random Forest · R² = {metrics.rf_r2 ?? "—"} · {metrics.n_features ?? 9} features
+            Random Forest · train R² = {metrics.rf_r2 ?? "—"}{metrics.rf_cv_r2 != null ? ` · CV R² = ${metrics.rf_cv_r2}` : ""} · {metrics.n_features ?? 9} features
           </p>
         </div>
         <button className="btn btn-secondary" onClick={toggleMode}>
@@ -737,14 +739,14 @@ export default function PredictPage() {
               >
                 Model Performance:&nbsp;
                 <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>
-                  RF (R² = {metrics.rf_r2 ?? "—"})
+                  RF (train R² = {metrics.rf_r2 ?? "—"}{metrics.rf_cv_r2 != null ? `, CV R² = ${metrics.rf_cv_r2}` : ""})
                 </span>
                 &nbsp;|&nbsp;
                 <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>
-                  MLR (R² = {metrics.mlr_r2 ?? "—"})
+                  MLR (train R² = {metrics.mlr_r2 ?? "—"}{metrics.mlr_cv_r2 != null ? `, CV R² = ${metrics.mlr_cv_r2}` : ""})
                 </span>
-                {metrics.rf_r2 != null && metrics.mlr_r2 != null && (
-                  <>&nbsp;· Random Forest captures non-linear interactions (+{(metrics.rf_r2 - metrics.mlr_r2).toFixed(2)} R²)</>
+                {metrics.rf_r2 != null && metrics.rf_cv_r2 != null && (
+                  <>&nbsp;· RF overfit gap: {(metrics.rf_r2 - metrics.rf_cv_r2).toFixed(2)}</>
                 )}
               </div>
             </div>
