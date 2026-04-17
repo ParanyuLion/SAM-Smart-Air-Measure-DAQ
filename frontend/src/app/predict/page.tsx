@@ -849,6 +849,76 @@ export default function PredictPage() {
         </div>
       </div>
 
+      {/* MLR Residual Analysis */}
+      <div
+        className="glass-panel"
+        style={{
+          padding: "1.5rem",
+          marginBottom: "1.5rem",
+        }}
+      >
+        <h2
+          style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem" }}
+        >
+          Linear Regression Residual Analysis
+        </h2>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "1rem",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--text-secondary)",
+                marginBottom: "0.5rem",
+              }}
+            >
+              Predicted vs Actual (45° line)
+            </p>
+            <img
+              src={`${API}/static/residual_predicted_vs_actual_mlr.png`}
+              alt="MLR Predicted vs Actual scatter plot with 45-degree reference line"
+              onClick={() =>
+                setExpandedImage({
+                  src: `${API}/static/residual_predicted_vs_actual_mlr.png`,
+                  alt: "MLR Predicted vs Actual scatter plot with 45-degree reference line",
+                  title: "Predicted vs Actual (Linear Regression)",
+                })
+              }
+              style={{ width: "100%", borderRadius: "8px", cursor: "zoom-in" }}
+            />
+          </div>
+
+          <div>
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--text-secondary)",
+                marginBottom: "0.5rem",
+              }}
+            >
+              Error Distribution (Actual - Predicted)
+            </p>
+            <img
+              src={`${API}/static/residual_error_distribution_mlr.png`}
+              alt="MLR histogram of residuals actual minus predicted"
+              onClick={() =>
+                setExpandedImage({
+                  src: `${API}/static/residual_error_distribution_mlr.png`,
+                  alt: "MLR histogram of residuals actual minus predicted",
+                  title: "Error Distribution (Actual - Predicted) — Linear Regression",
+                })
+              }
+              style={{ width: "100%", borderRadius: "8px", cursor: "zoom-in" }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Sensor Data Analytics Graph */}
       <div
         className="glass-panel"
