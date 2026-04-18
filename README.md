@@ -11,6 +11,14 @@ This README is aligned with what the codebase currently implements.
 
 **Affiliation:** Department of Computer Engineering, Faculty of Engineering, Kasetsart University (Software and Knowledge Engineering).
 
+## Video Presentation
+
+For DAQ:
+https://youtu.be/uo7WXr30O-Y
+
+For DA:
+https://youtu.be/KYs1_O15RE4
+
 ## What Is Implemented Now
 
 - AQI proxy via AQICN (`/api/aqi`) with 10-minute in-memory cache
