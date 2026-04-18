@@ -9,7 +9,7 @@ This README is aligned with what the codebase currently implements.
 - 6710545733 Phruek Chantarasittiphon
 - 6710545784 Paranyu Kittinavakit
 
-We are from Software and Knowledge Engineering, Department of Computer Engineering, Faculty of Engineering, Kasetsart University.
+**Affiliation:** Department of Computer Engineering, Faculty of Engineering, Kasetsart University (Software and Knowledge Engineering).
 
 ## What Is Implemented Now
 
@@ -72,7 +72,6 @@ Related files:
 - **Digital Temperature Sensor (KY-028)** - measures temperature
 - **Temperature and Humidity Sensor (KY-015)** - measures humidity
 - **CO Sensor (MQ-9)** - detects carbon monoxide concentration
-- **Smoke Gas Sensor (MQ-2)** – detects smoke and combustible gases
 - **Dust Sensor (PMS7003)** - measures particulate matter such as PM2.5
 
 ## Requirements
@@ -154,6 +153,11 @@ Frontend `.env.local`:
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
+## 📊 Database Schema
+
+The system integrates data from sensors, weather APIs, and historical AQI records.
+![Database Schema Diagram](db_diagarm.png)
+
 ## API Endpoints
 
 - `GET /` : Health message + docs path
@@ -210,6 +214,6 @@ SAM-Smart-Air-Measure-DAQ/
 └── kidbright/
 ```
 
-## License
+## Link to GitHub repository
 
-Educational project (DAQ course).
+https://github.com/ParanyuLion/SAM-Smart-Air-Measure-DAQ
