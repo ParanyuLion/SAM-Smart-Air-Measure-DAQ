@@ -98,12 +98,20 @@ The prediction route attempts to load:
 - `backend/models/rf_model.pkl`
 - `backend/models/mlr_model.pkl`
 
-Generate/copy model artifacts using:
+Windows:
 
 ```bash
 cd analysis
 pip install scikit-learn joblib pandas
 python save_model.py
+```
+
+macOS:
+
+```bash
+cd analysis
+python3 -m pip install scikit-learn joblib pandas
+python3 save_model.py
 ```
 
 Current `analysis/save_model.py` behavior:
@@ -123,11 +131,24 @@ Also used by `/predict` page if present:
 
 ### 2) Backend
 
+Windows:
+
 ```bash
 cd backend
 pip install -r requirements.txt
 cp .env.example .env
 python -m uvicorn main:app --reload
+```
+
+macOS:
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python3 -m uvicorn main:app --reload
 ```
 
 Backend `.env` keys:
@@ -147,6 +168,8 @@ Notes:
 - `/api/dashboard/stats` will return `connected: false` in that case.
 
 ### 3) Frontend
+
+Windows and macOS: same commands
 
 ```bash
 cd frontend
