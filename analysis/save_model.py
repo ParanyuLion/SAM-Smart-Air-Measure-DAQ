@@ -30,7 +30,7 @@ print(f'Training on {len(data)} rows, {len(FEATURE_COLS)} features')
 
 kf = KFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
 
-rf_model = RandomForestRegressor(n_estimators=100, max_depth=5, random_state=RANDOM_STATE)
+rf_model = RandomForestRegressor(n_estimators=150, max_depth=10, random_state=RANDOM_STATE)
 rf_model.fit(X, y)
 rf_r2 = rf_model.score(X, y)
 rf_cv_r2 = cross_val_score(rf_model, X, y, cv=kf, scoring='r2').mean()
