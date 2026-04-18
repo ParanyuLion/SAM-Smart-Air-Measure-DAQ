@@ -62,6 +62,39 @@ def get_latest_sensor_row() -> dict | None:
         return None
 
 
+def get_latest_tmd_row() -> dict | None:
+    if _engine is None:
+        return None
+    try:
+        with _engine.connect() as conn:
+            row = conn.execute(
+                text("SELECT * FROM tmd_data ORDER BY id DESC LIMIT 1")
+            ).mappings().first()
+            return dict(row) if row else None
+    except SQLAlchemyError:
+        return None
+
+
+def get_tmd_row_near_ts(ts) -> dict | None:
+    """Return the latest row from tmd_data closest to *ts*."""
+    if _engine is None or ts is None:
+        return None
+    try:
+        with _engine.connect() as conn:
+            row = conn.execute(
+                text(
+                    "SELECT * FROM tmd_data "
+                    "ORDER BY ABS(TIMESTAMPDIFF(SECOND, ts, :target_ts)) ASC "
+                    "LIMIT 1"
+                ),
+                {"target_ts": ts},
+            ).mappings().first()
+            return dict(row) if row else None
+    except SQLAlchemyError as e:
+        print(f"[predict] get_tmd_row_near_ts error: {e}")
+        return None
+
+
 def get_actual_aqi_near_ts(ts) -> dict | None:
     """Return the {pm25, ts} row from aqi_data closest to *ts*."""
     if _engine is None:

@@ -4,7 +4,12 @@ import numpy as np
 import joblib
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from database import get_latest_sensor_row, get_actual_aqi_near_ts
+from database import (
+    get_actual_aqi_near_ts,
+    get_latest_sensor_row,
+    get_latest_tmd_row,
+    get_tmd_row_near_ts,
+)
 
 router = APIRouter()
 
@@ -60,17 +65,20 @@ async def get_latest():
         return DEFAULTS
 
     ts = row.get("ts")
+    tmd_row = get_tmd_row_near_ts(ts) if ts is not None else None
+    if tmd_row is None:
+        tmd_row = get_latest_tmd_row()
 
     # Look up the closest non-null pm25_aqi by timestamp
     actual_row = get_actual_aqi_near_ts(ts) if ts is not None else None
 
     return {
-        "temp": float(row.get("temp", DEFAULTS["temp"])),
+        "temp": float(row.get("temp_ky", DEFAULTS["temp"])),
         "humidity": int(row.get("humidity", DEFAULTS["humidity"])),
-        "gas_co": int(row.get("gas_co", DEFAULTS["gas_co"])),
-        "temp_tmd": float(row.get("temp_tmd", DEFAULTS["temp_tmd"])),
-        "humidity_tmd": float(row.get("humidity_tmd", DEFAULTS["humidity_tmd"])),
-        "rainfall_tmd": float(row.get("rainfall_tmd", DEFAULTS["rainfall_tmd"])),
+        "gas_co": int(row.get("co_raw", DEFAULTS["gas_co"])),
+        "temp_tmd": float(tmd_row.get("temp", DEFAULTS["temp_tmd"])) if tmd_row else DEFAULTS["temp_tmd"],
+        "humidity_tmd": float(tmd_row.get("humidity", DEFAULTS["humidity_tmd"])) if tmd_row else DEFAULTS["humidity_tmd"],
+        "rainfall_tmd": float(tmd_row.get("rainfall", DEFAULTS["rainfall_tmd"])) if tmd_row else DEFAULTS["rainfall_tmd"],
         "place_enc": str(row.get("place", DEFAULTS["place"])),
         "pm25": int(row.get("pm25", DEFAULTS["pm25"])),
         "pm10": int(row.get("pm10", DEFAULTS["pm10"])),

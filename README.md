@@ -4,6 +4,13 @@ Air quality dashboard + PM2.5 AQI prediction project using a Next.js frontend an
 
 This README is aligned with what the codebase currently implements.
 
+## Team members
+
+- 6710545733 Phruek Chantarasittiphon
+- 6710545784 Paranyu Kittinavakit
+
+We are from Software and Knowledge Engineering, Department of Computer Engineering, Faculty of Engineering, Kasetsart University.
+
 ## What Is Implemented Now
 
 - AQI proxy via AQICN (`/api/aqi`) with 10-minute in-memory cache
