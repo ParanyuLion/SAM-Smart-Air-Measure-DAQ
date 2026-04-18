@@ -166,6 +166,14 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 The system integrates data from sensors, weather APIs, and historical AQI records.
 ![Database Schema Diagram](db_diagarm.png)
 
+SQL schema files used in this project:
+
+- `database_schema/aqi_data.sql`
+- `database_schema/sensor_data.sql`
+- `database_schema/tmd_data.sql`
+
+If you want to use data from https://iot.cpe.ku.ac.th/pma/. Use b6710545784 account
+
 ## API Endpoints
 
 - `GET /` : Health message + docs path
@@ -202,6 +210,10 @@ SAM-Smart-Air-Measure-DAQ/
 ├── analysis/
 │   ├── save_model.py
 │   └── output/
+├── database_schema/
+│   ├── aqi_data.sql
+│   ├── sensor_data.sql
+│   └── tmd_data.sql
 ├── backend/
 │   ├── main.py
 │   ├── database.py
